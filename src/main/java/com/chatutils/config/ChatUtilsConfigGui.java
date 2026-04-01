@@ -21,8 +21,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
         this.parent = parent;
     }
 
-
-
     @Override
     public void initGui() {
         refreshButtons();
@@ -34,18 +32,12 @@ public class ChatUtilsConfigGui extends GuiScreen {
         int cx     = width / 2;
         int startY = height / 6;
 
-        int col1X = cx - 235;
-        int col2X = cx - 80;
-        int col3X = cx + 5;   // wait – we have 4 columns, adjust
-
-
         int leftX  = cx - 160;
         int rightX = cx + 5;
 
         int leftY  = startY;
         int rightY = startY;
 
-        // Column 1: Compact Chat
         GuiButton compactToggle = new GuiButton(0, leftX, leftY, 150, 20,
                 "Compact Chat: " + onOff(ChatUtils.Config.compactingEnabled));
         leftY += 24;
@@ -60,11 +52,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 "Consecutive Mode: " + onOff(ChatUtils.Config.consecutiveOnly));
         leftY += 24;
 
-        GuiButton copyBtn = new GuiButton(3, leftX, leftY, 150, 20,
-                "Stacked Copy: " + onOff(ChatUtils.Config.stackedMessageCopyEnabled));
-        leftY += 24;
-
-        //  Column 2: Timestamps
         GuiButton timestampToggle = new GuiButton(4, rightX, rightY, 150, 20,
                 "Timestamps: " + onOff(ChatUtils.Config.timestampsEnabled));
         rightY += 24;
@@ -82,8 +69,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 "Style: " + style);
         rightY += 24;
 
-        //  Second row: Chat Heads and Visual
-        // Push both rows below the longer of the two first-row columns.
         int secondRowY = Math.max(leftY, rightY) + 12;
 
         int headsX  = leftX;
@@ -91,7 +76,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
         int headsY  = secondRowY;
         int visualY = secondRowY;
 
-        //  Column 3: Chat Heads
         GuiButton headsToggle = new GuiButton(10, headsX, headsY, 150, 20,
                 "Chat Heads: " + onOff(ChatUtils.Config.chatHeads));
         headsY += 24;
@@ -104,7 +88,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 "Hide Repeat Head: " + onOff(ChatUtils.Config.hideHeadOnConsecutive));
         headsY += 24;
 
-        // Column 4: Visual
         GuiButton transparentBtn = new GuiButton(20, visualX, visualY, 150, 20,
                 "Transparent Chat: " + onOff(ChatUtils.Config.transparentChat));
         visualY += 24;
@@ -113,15 +96,16 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 "Animated Chat: " + onOff(ChatUtils.Config.animatedChat));
         visualY += 24;
 
-        //  Done
+        GuiButton chatCopyBtn = new GuiButton(22, visualX, visualY, 150, 20,
+                "Chat Copy: " + onOff(ChatUtils.Config.chatCopyEnabled));
+        visualY += 24;
+
         int doneY = Math.max(headsY, visualY) + 12;
         GuiButton done = new GuiButton(99, cx - 100, doneY, 200, 20, "Done");
 
-        // Register
         buttonList.add(compactToggle);
         buttonList.add(expireBtn);
         buttonList.add(consecutiveBtn);
-        buttonList.add(copyBtn);
 
         buttonList.add(timestampToggle);
         buttonList.add(formatBtn);
@@ -134,27 +118,25 @@ public class ChatUtilsConfigGui extends GuiScreen {
 
         buttonList.add(transparentBtn);
         buttonList.add(animatedBtn);
+        buttonList.add(chatCopyBtn);
 
         buttonList.add(done);
 
-        //  Dynamic buttons
         boolean compact = ChatUtils.Config.compactingEnabled;
         expireBtn.enabled      = compact;
         consecutiveBtn.enabled = compact;
-        copyBtn.enabled        = compact;
 
         boolean timestamps = ChatUtils.Config.timestampsEnabled;
         formatBtn.enabled  = timestamps;
         secondsBtn.enabled = timestamps;
         styleBtn.enabled   = timestamps;
 
-        boolean heads    = ChatUtils.Config.chatHeads;
+        boolean heads = ChatUtils.Config.chatHeads;
         offsetBtn.enabled          = heads;
         hideConsecutiveBtn.enabled = heads;
     }
 
     private String onOff(boolean b) { return b ? "ON" : "OFF"; }
-
 
     @Override
     protected void actionPerformed(GuiButton button) throws IOException {
@@ -170,8 +152,7 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 else if (t == 300) ChatUtils.Config.expireTimeSeconds = -1;
                 else               ChatUtils.Config.expireTimeSeconds = 30;
                 break;
-            case 2: ChatUtils.Config.consecutiveOnly           = !ChatUtils.Config.consecutiveOnly;           break;
-            case 3: ChatUtils.Config.stackedMessageCopyEnabled = !ChatUtils.Config.stackedMessageCopyEnabled; break;
+            case 2: ChatUtils.Config.consecutiveOnly = !ChatUtils.Config.consecutiveOnly; break;
 
             // Timestamps
             case 4: ChatUtils.Config.timestampsEnabled   = !ChatUtils.Config.timestampsEnabled;   break;
@@ -179,16 +160,17 @@ public class ChatUtilsConfigGui extends GuiScreen {
             case 6: ChatUtils.Config.timestampShowSeconds = !ChatUtils.Config.timestampShowSeconds; break;
             case 7: ChatUtils.Config.timestampStyle = ChatUtils.Config.timestampStyle == 0 ? 1 : 0; break;
 
-            //  Chat Heads
+            // Chat Heads
             case 10: ChatUtils.Config.chatHeads               = !ChatUtils.Config.chatHeads;               break;
             case 11: ChatUtils.Config.offsetNonPlayerMessages = !ChatUtils.Config.offsetNonPlayerMessages; break;
             case 12: ChatUtils.Config.hideHeadOnConsecutive   = !ChatUtils.Config.hideHeadOnConsecutive;   break;
 
-            //  Visual
+            // Visual
             case 20: ChatUtils.Config.transparentChat = !ChatUtils.Config.transparentChat; break;
             case 21: ChatUtils.Config.animatedChat    = !ChatUtils.Config.animatedChat;    break;
+            case 22: ChatUtils.Config.chatCopyEnabled = !ChatUtils.Config.chatCopyEnabled; break;
 
-            //  Done
+            // Done
             case 99:
                 mc.displayGuiScreen(parent);
                 return;
@@ -197,7 +179,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
         ChatUtils.saveConfig();
         refreshButtons();
     }
-
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -208,13 +189,11 @@ public class ChatUtilsConfigGui extends GuiScreen {
 
         drawCenteredString(fontRendererObj, "Chat Utils Config", cx, 10, 0xFFFFFF);
 
-        // Column headers
-        drawString(fontRendererObj, "Compact Chat",  cx - 160, startY - 12, 0xAAAAAA);
-        drawString(fontRendererObj, "Timestamps",    cx +   5, startY - 12, 0xAAAAAA);
+        drawString(fontRendererObj, "Compact Chat", cx - 160, startY - 12, 0xAAAAAA);
+        drawString(fontRendererObj, "Timestamps",   cx +   5, startY - 12, 0xAAAAAA);
 
-        // Second-row headers – replicate the Y calculation from refreshButtons().
-        int leftY  = startY + 4 * 24;   // 4 compact buttons
-        int rightY = startY + 4 * 24;   // 4 timestamp buttons
+        int leftY      = startY + 3 * 24;
+        int rightY     = startY + 4 * 24;
         int secondRowY = Math.max(leftY, rightY) + 12;
 
         drawString(fontRendererObj, "Chat Heads", cx - 160, secondRowY - 12, 0xAAAAAA);
@@ -222,7 +201,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
 
         super.drawScreen(mouseX, mouseY, partialTicks);
 
-        // Tooltip logic
         GuiButton currentHover = null;
         for (GuiButton b : buttonList) {
             if (b.isMouseOver()) { currentHover = b; break; }
@@ -254,7 +232,6 @@ public class ChatUtilsConfigGui extends GuiScreen {
             case 0:  return Arrays.asList("Merge identical chat messages.");
             case 1:  return Arrays.asList("30s / 60s / 120s / 300s – only stack within that time.", "", "Never – no time limit.");
             case 2:  return Arrays.asList("Only stack consecutive messages.");
-            case 3:  return Arrays.asList("Copy compacted messages to clipboard.");
             // Timestamps
             case 4:  return Arrays.asList("Show time before messages.");
             case 5:  return Arrays.asList("Use 24-hour or 12-hour format.");
@@ -266,7 +243,10 @@ public class ChatUtilsConfigGui extends GuiScreen {
             case 12: return Arrays.asList("(BREAKS WHILE COMPACT CHAT IS ENABLED)", "", "Hide the head on back-to-back messages from the same player.");
             // Visual
             case 20: return Arrays.asList("Makes chat background transparent.");
-            case 21: return Arrays.asList("Aminates chat messages.");
+            case 21: return Arrays.asList("Animates chat messages.");
+            case 22: return Arrays.asList(
+                    "Shift+click – copy the full message to clipboard.",
+                    "Ctrl+click  – copy just the hovered line.");
             default: return null;
         }
     }

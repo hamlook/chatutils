@@ -32,6 +32,7 @@ public class MixinChatLine implements ChatLineHook {
 
     @Unique private long chatutils$uniqueId = 0L;
 
+    @Unique private IChatComponent chatutils$fullMsg = null;
 
     @Unique private static long chatutils$lastUniqueId = 0L;
 
@@ -41,17 +42,15 @@ public class MixinChatLine implements ChatLineHook {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(int updateCounter, IChatComponent lineString, int chatLineID, CallbackInfo ci) {
 
-        // Assign a monotonically-increasing unique ID for deletion tracking.
         chatutils$uniqueId = ++chatutils$lastUniqueId;
 
-        IChatComponent fullMsg = ChatUtilsState.currentFullMessage;
-        if (fullMsg != null && fullMsg == ChatUtilsState.lastFullMessage) {
-            // Continuation fragment – inherit nothing; no head on this line.
+        chatutils$fullMsg = ChatUtilsState.currentFullMessage;
+
+        if (chatutils$fullMsg != null && chatutils$fullMsg == ChatUtilsState.lastFullMessage) {
             return;
         }
-        ChatUtilsState.lastFullMessage = fullMsg;
+        ChatUtilsState.lastFullMessage = chatutils$fullMsg;
 
-        //  player detection
         NetHandlerPlayClient netHandler = Minecraft.getMinecraft().getNetHandler();
         if (netHandler == null) return;
 
@@ -63,10 +62,8 @@ public class MixinChatLine implements ChatLineHook {
             for (String word : SPLIT_PATTERN.split(beforeColon)) {
                 if (word.isEmpty()) continue;
 
-                // Try exact username match first
                 NetworkPlayerInfo info = netHandler.getPlayerInfo(word);
 
-                // Fall back to display-name / nickname lookup
                 if (info == null) {
                     info = chatutils$getPlayerFromNickname(word, netHandler, nicknameCache);
                 }
@@ -75,13 +72,10 @@ public class MixinChatLine implements ChatLineHook {
                     chatutils$detected          = true;
                     chatutils$detectedPlayerInfo = info;
 
-                    // Consecutive-message
-                    // If this is the same player as the last detected player
-                    // optionally null out chatutils$playerInfo so no head is drawn
                     if (ChatUtilsState.lastDetectedPlayer != null &&
                             info.getGameProfile() == ChatUtilsState.lastDetectedPlayer.getGameProfile()
                             && ChatUtils.Config.hideHeadOnConsecutive) {
-                        chatutils$playerInfo = null; // suppressed, but chatutils$detected stays true
+                        chatutils$playerInfo = null;
                     } else {
                         chatutils$playerInfo = info;
                     }
@@ -94,8 +88,6 @@ public class MixinChatLine implements ChatLineHook {
             e.printStackTrace();
         }
     }
-
-    //  nickname helper
 
     @Unique
     @Nullable
@@ -136,5 +128,10 @@ public class MixinChatLine implements ChatLineHook {
     @Override
     public long chatutils$getUniqueId() {
         return chatutils$uniqueId;
+    }
+
+    @Override
+    public IChatComponent chatutils$getFullMessage() {
+        return chatutils$fullMsg;
     }
 }

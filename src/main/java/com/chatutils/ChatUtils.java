@@ -1,10 +1,10 @@
 package com.chatutils;
 
-import com.chatutils.command.ChatUtilsCommand;
-import com.chatutils.command.CopyToClipboardCommand;
 import com.chatutils.config.ChatUtilsConfigGui;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.command.CommandBase;
+import net.minecraft.command.ICommandSender;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.MinecraftForge;
@@ -39,10 +39,9 @@ public class ChatUtils {
     public static class Config {
 
         // Compacting
-        public static boolean compactingEnabled         = true;
-        public static int     expireTimeSeconds         = -1;
-        public static boolean consecutiveOnly           = false;
-        public static boolean stackedMessageCopyEnabled = true;
+        public static boolean compactingEnabled = true;
+        public static int     expireTimeSeconds = -1;
+        public static boolean consecutiveOnly   = false;
 
         // Timestamps
         public static boolean timestampsEnabled    = false;
@@ -58,6 +57,9 @@ public class ChatUtils {
         // Visual
         public static boolean transparentChat = false;
         public static boolean animatedChat    = false;
+
+        // Copy
+        public static boolean chatCopyEnabled = true;
     }
 
     @Mod.EventHandler
@@ -72,10 +74,9 @@ public class ChatUtils {
         configFile.load();
 
         // Compacting
-        Config.compactingEnabled         = configFile.getBoolean("compactingEnabled",         Configuration.CATEGORY_GENERAL, true,  "");
-        Config.expireTimeSeconds         = configFile.getInt    ("expireTimeSeconds",          Configuration.CATEGORY_GENERAL, 60, -1, Integer.MAX_VALUE, "");
-        Config.consecutiveOnly           = configFile.getBoolean("consecutiveOnly",            Configuration.CATEGORY_GENERAL, false, "");
-        Config.stackedMessageCopyEnabled = configFile.getBoolean("stackedMessageCopyEnabled",  Configuration.CATEGORY_GENERAL, true,  "");
+        Config.compactingEnabled = configFile.getBoolean("compactingEnabled", Configuration.CATEGORY_GENERAL, true,  "");
+        Config.expireTimeSeconds = configFile.getInt    ("expireTimeSeconds",  Configuration.CATEGORY_GENERAL, 60, -1, Integer.MAX_VALUE, "");
+        Config.consecutiveOnly   = configFile.getBoolean("consecutiveOnly",    Configuration.CATEGORY_GENERAL, false, "");
 
         // Timestamps
         Config.timestampsEnabled    = configFile.getBoolean("timestampsEnabled",    Configuration.CATEGORY_GENERAL, false, "");
@@ -92,6 +93,9 @@ public class ChatUtils {
         Config.transparentChat = configFile.getBoolean("transparentChat", Configuration.CATEGORY_GENERAL, false, "");
         Config.animatedChat    = configFile.getBoolean("animatedChat",    Configuration.CATEGORY_GENERAL, false, "");
 
+        // Copy
+        Config.chatCopyEnabled = configFile.getBoolean("chatCopyEnabled", Configuration.CATEGORY_GENERAL, true, "");
+
         if (configFile.hasChanged()) configFile.save();
     }
 
@@ -99,10 +103,9 @@ public class ChatUtils {
         if (configFile == null) return;
 
         // Compacting
-        configFile.get(Configuration.CATEGORY_GENERAL, "compactingEnabled",         true ).set(Config.compactingEnabled);
-        configFile.get(Configuration.CATEGORY_GENERAL, "expireTimeSeconds",         60   ).set(Config.expireTimeSeconds);
-        configFile.get(Configuration.CATEGORY_GENERAL, "consecutiveOnly",           false).set(Config.consecutiveOnly);
-        configFile.get(Configuration.CATEGORY_GENERAL, "stackedMessageCopyEnabled", true ).set(Config.stackedMessageCopyEnabled);
+        configFile.get(Configuration.CATEGORY_GENERAL, "compactingEnabled", true ).set(Config.compactingEnabled);
+        configFile.get(Configuration.CATEGORY_GENERAL, "expireTimeSeconds",  60  ).set(Config.expireTimeSeconds);
+        configFile.get(Configuration.CATEGORY_GENERAL, "consecutiveOnly",   false).set(Config.consecutiveOnly);
 
         // Timestamps
         configFile.get(Configuration.CATEGORY_GENERAL, "timestampsEnabled",    false).set(Config.timestampsEnabled);
@@ -119,6 +122,9 @@ public class ChatUtils {
         configFile.get(Configuration.CATEGORY_GENERAL, "transparentChat", false).set(Config.transparentChat);
         configFile.get(Configuration.CATEGORY_GENERAL, "animatedChat",    false).set(Config.animatedChat);
 
+        // Copy
+        configFile.get(Configuration.CATEGORY_GENERAL, "chatCopyEnabled", true).set(Config.chatCopyEnabled);
+
         configFile.save();
     }
 
@@ -129,10 +135,7 @@ public class ChatUtils {
         openGuiKey = new KeyBinding("key.chatutils.opengui", Keyboard.KEY_B, "key.categories.chatutils");
         ClientRegistry.registerKeyBinding(openGuiKey);
 
-        ChatUtilsCommand.setOpenGuiCallback(() -> pendingGuiOpen = true);
-
         ClientCommandHandler.instance.registerCommand(new ChatUtilsCommand());
-        ClientCommandHandler.instance.registerCommand(new CopyToClipboardCommand());
     }
 
     @SubscribeEvent
@@ -162,4 +165,11 @@ public class ChatUtils {
         ticks = 0;
     }
 
+    private static class ChatUtilsCommand extends CommandBase {
+        public String  getCommandName()                                     { return "chatutils"; }
+        public String  getCommandUsage(ICommandSender sender)               { return "/chatutils"; }
+        public void    processCommand(ICommandSender sender, String[] args) { pendingGuiOpen = true; }
+        public int     getRequiredPermissionLevel()                         { return 0; }
+        public boolean canCommandSenderUseCommand(ICommandSender s)         { return true; }
+    }
 }

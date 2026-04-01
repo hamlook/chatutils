@@ -4,6 +4,7 @@ import com.chatutils.ChatCompactHandler;
 import com.chatutils.ChatUtils;
 import com.chatutils.ChatUtilsState;
 import com.chatutils.hook.ChatLineHook;
+import com.chatutils.hook.GuiNewChatHook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ChatLine;
 import net.minecraft.client.gui.FontRenderer;
@@ -12,6 +13,8 @@ import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MathHelper;
+import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
@@ -24,14 +27,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(GuiNewChat.class)
-public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui {
+public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui implements GuiNewChatHook {
 
-    @Shadow @Final private List<ChatLine> chatLines;
-    @Shadow @Final private List<ChatLine> drawnChatLines;
-    @Shadow @Final private Minecraft mc;
+    @Shadow
+    @Final
+    private List<ChatLine> chatLines;
+    @Shadow
+    @Final
+    private List<ChatLine> drawnChatLines;
+    @Shadow
+    @Final
+    private Minecraft mc;
+    @Shadow
+    private int scrollPos;
+
+    @Shadow
+    public abstract boolean getChatOpen();
+
+    @Shadow
+    public abstract int getLineCount();
+
+    @Shadow
+    public abstract int getChatWidth();
+
+    @Shadow
+    public abstract float getChatScale();
 
     @Unique
     private ChatLine chatutils$renderLine = null;
+
+    @Unique
+    private ChatLine chatutils$hoveredLine = null;
 
     @ModifyVariable(method = "setChatLine", at = @At("HEAD"), ordinal = 0)
     private IChatComponent injectTimestamp(IChatComponent component) {
@@ -90,6 +116,13 @@ public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui {
         GlStateManager.translate(0.0D, -shift, 0.0D);
     }
 
+    @Inject(method = "drawChat", at = @At("HEAD"))
+    private void chatutils$computeHoveredLine(int updateCounter, CallbackInfo ci) {
+        chatutils$hoveredLine = null;
+        if (!ChatUtils.Config.chatCopyEnabled || !getChatOpen()) return;
+        chatutils$hoveredLine = chatutils$getHoveredChatLine(Mouse.getX(), mc.displayHeight - Mouse.getY() - 1);
+    }
+
     @Redirect(
             method = "drawChat",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiNewChat;drawRect(IIIII)V", ordinal = 0)
@@ -97,6 +130,12 @@ public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui {
     private void chatutils$maybeClearBackground(int left, int top, int right, int bottom, int color) {
         int newRight = ChatUtils.Config.chatHeads ? right + 10 : right;
         int newColor = ChatUtils.Config.transparentChat ? 0x00000000 : color;
+
+        if (ChatUtils.Config.chatCopyEnabled && getChatOpen()
+                && chatutils$hoveredLine != null && chatutils$renderLine == chatutils$hoveredLine) {
+            newColor = ChatUtils.Config.transparentChat ? 0x22AAAACC : 0x60AAAACC;
+        }
+
         drawRect(left, top, newRight, bottom, newColor);
     }
 
@@ -148,5 +187,38 @@ public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui {
             return mouseX - 10;
         }
         return mouseX;
+    }
+
+    @Override
+    public ChatLine chatutils$getCurrentHoveredLine() {
+        return chatutils$hoveredLine;
+    }
+
+    @Override
+    public ChatLine chatutils$getHoveredChatLine(int rawMouseX, int rawMouseY) {
+        if (!getChatOpen()) return null;
+
+        net.minecraft.client.gui.ScaledResolution sr = new net.minecraft.client.gui.ScaledResolution(mc);
+        int scaleFactor = sr.getScaleFactor();
+
+        float chatScale = getChatScale();
+
+        int mouseY = rawMouseY / scaleFactor;
+        int y = (sr.getScaledHeight() - 27) - mouseY;
+        y = MathHelper.floor_float((float) y / chatScale);
+
+        if (y < 0) return null;
+
+        int visibleLines = Math.min(getLineCount(), drawnChatLines.size());
+
+        if (y < mc.fontRendererObj.FONT_HEIGHT * visibleLines + visibleLines) {
+            int index = y / mc.fontRendererObj.FONT_HEIGHT + scrollPos;
+
+            if (index >= 0 && index < drawnChatLines.size()) {
+                return drawnChatLines.get(index);
+            }
+        }
+
+        return null;
     }
 }
