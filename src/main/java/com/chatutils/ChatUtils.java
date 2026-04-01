@@ -1,11 +1,10 @@
 package com.chatutils;
 
+import com.chatutils.command.ChatUtilsCommand;
+import com.chatutils.command.CopyToClipboardCommand;
 import com.chatutils.config.ChatUtilsConfigGui;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.command.CommandBase;
-import net.minecraft.command.ICommandSender;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.MinecraftForge;
@@ -130,6 +129,8 @@ public class ChatUtils {
         openGuiKey = new KeyBinding("key.chatutils.opengui", Keyboard.KEY_B, "key.categories.chatutils");
         ClientRegistry.registerKeyBinding(openGuiKey);
 
+        ChatUtilsCommand.setOpenGuiCallback(() -> pendingGuiOpen = true);
+
         ClientCommandHandler.instance.registerCommand(new ChatUtilsCommand());
         ClientCommandHandler.instance.registerCommand(new CopyToClipboardCommand());
     }
@@ -161,22 +162,4 @@ public class ChatUtils {
         ticks = 0;
     }
 
-    private static class ChatUtilsCommand extends CommandBase {
-        public String  getCommandName()                                     { return "chatutils"; }
-        public String  getCommandUsage(ICommandSender sender)               { return "/chatutils"; }
-        public void    processCommand(ICommandSender sender, String[] args) { pendingGuiOpen = true; }
-        public int     getRequiredPermissionLevel()                         { return 0; }
-        public boolean canCommandSenderUseCommand(ICommandSender s)         { return true; }
-    }
-
-    private static class CopyToClipboardCommand extends CommandBase {
-        public String  getCommandName()                                     { return "copytoclipboard"; }
-        public String  getCommandUsage(ICommandSender sender)               { return "/copytoclipboard <text>"; }
-        public void    processCommand(ICommandSender sender, String[] args) {
-            if (args == null || args.length == 0) return;
-            try { GuiScreen.setClipboardString(String.join(" ", args)); } catch (Exception ignored) {}
-        }
-        public int     getRequiredPermissionLevel()                         { return 0; }
-        public boolean canCommandSenderUseCommand(ICommandSender s)         { return true; }
-    }
 }

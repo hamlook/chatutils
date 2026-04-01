@@ -20,17 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * Ported directly from Chatting's ChatLineMixin.
- *
- * On every ChatLine construction we scan the text before the first colon for a
- * player name (by username or display-name / nickname).  If found, we store the
- * player's NetworkPlayerInfo so the render mixin can draw their skin face.
- *
- * Continuation lines (word-wrapped fragments of the same message) are detected
- * via {@link ChatUtilsState#currentFullMessage} and skip detection so only the
- * first fragment gets a head.
- */
 @Mixin(ChatLine.class)
 public class MixinChatLine implements ChatLineHook {
 
@@ -39,7 +28,6 @@ public class MixinChatLine implements ChatLineHook {
 
     @Unique private NetworkPlayerInfo chatutils$playerInfo = null;
 
-    // The detected player, preserved even when chatutils$playerInfo is suppressed
     @Unique private NetworkPlayerInfo chatutils$detectedPlayerInfo = null;
 
     @Unique private long chatutils$uniqueId = 0L;
@@ -47,10 +35,6 @@ public class MixinChatLine implements ChatLineHook {
 
     @Unique private static long chatutils$lastUniqueId = 0L;
 
-    /**
-     * Strips formatting codes and non-word characters so each remaining token
-     * can be tested as a potential player name.
-     */
     @Unique private static final Pattern SPLIT_PATTERN = Pattern.compile("(§.)|\\W");
 
 
@@ -138,7 +122,6 @@ public class MixinChatLine implements ChatLineHook {
         }
     }
 
-    //  ChatLineHook interface ─
 
     @Override
     public boolean chatutils$hasDetected() {
