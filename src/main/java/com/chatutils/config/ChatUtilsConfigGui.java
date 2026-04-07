@@ -100,6 +100,10 @@ public class ChatUtilsConfigGui extends GuiScreen {
                 "Chat Copy: " + onOff(ChatUtils.Config.chatCopyEnabled));
         visualY += 24;
 
+        GuiButton chatCopyFormattedBtn = new GuiButton(23, visualX, visualY, 150, 20,
+                "Copy Formatted: " + onOff(ChatUtils.Config.chatCopyFormatted));
+        visualY += 24;
+
         int doneY = Math.max(headsY, visualY) + 12;
         GuiButton done = new GuiButton(99, cx - 100, doneY, 200, 20, "Done");
 
@@ -119,6 +123,7 @@ public class ChatUtilsConfigGui extends GuiScreen {
         buttonList.add(transparentBtn);
         buttonList.add(animatedBtn);
         buttonList.add(chatCopyBtn);
+        buttonList.add(chatCopyFormattedBtn);
 
         buttonList.add(done);
 
@@ -134,6 +139,8 @@ public class ChatUtilsConfigGui extends GuiScreen {
         boolean heads = ChatUtils.Config.chatHeads;
         offsetBtn.enabled          = heads;
         hideConsecutiveBtn.enabled = heads;
+
+        chatCopyFormattedBtn.enabled = ChatUtils.Config.chatCopyEnabled;
     }
 
     private String onOff(boolean b) { return b ? "ON" : "OFF"; }
@@ -166,9 +173,10 @@ public class ChatUtilsConfigGui extends GuiScreen {
             case 12: ChatUtils.Config.hideHeadOnConsecutive   = !ChatUtils.Config.hideHeadOnConsecutive;   break;
 
             // Visual
-            case 20: ChatUtils.Config.transparentChat = !ChatUtils.Config.transparentChat; break;
-            case 21: ChatUtils.Config.animatedChat    = !ChatUtils.Config.animatedChat;    break;
-            case 22: ChatUtils.Config.chatCopyEnabled = !ChatUtils.Config.chatCopyEnabled; break;
+            case 20: ChatUtils.Config.transparentChat  = !ChatUtils.Config.transparentChat;  break;
+            case 21: ChatUtils.Config.animatedChat     = !ChatUtils.Config.animatedChat;     break;
+            case 22: ChatUtils.Config.chatCopyEnabled  = !ChatUtils.Config.chatCopyEnabled;  break;
+            case 23: ChatUtils.Config.chatCopyFormatted = !ChatUtils.Config.chatCopyFormatted; break;
 
             // Done
             case 99:
@@ -247,6 +255,9 @@ public class ChatUtilsConfigGui extends GuiScreen {
             case 22: return Arrays.asList(
                     "Shift+click – copy the full message to clipboard.",
                     "Ctrl+click  – copy just the hovered line.");
+            case 23: return Arrays.asList(
+                    "When ON, copied text keeps Minecraft color codes (§a, §b, etc.).",
+                    "When OFF, color codes are stripped from the clipboard.");
             default: return null;
         }
     }

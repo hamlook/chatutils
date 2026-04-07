@@ -59,7 +59,8 @@ public class ChatUtils {
         public static boolean animatedChat    = false;
 
         // Copy
-        public static boolean chatCopyEnabled = true;
+        public static boolean chatCopyEnabled   = false;
+        public static boolean chatCopyFormatted = false;
     }
 
     @Mod.EventHandler
@@ -94,7 +95,8 @@ public class ChatUtils {
         Config.animatedChat    = configFile.getBoolean("animatedChat",    Configuration.CATEGORY_GENERAL, false, "");
 
         // Copy
-        Config.chatCopyEnabled = configFile.getBoolean("chatCopyEnabled", Configuration.CATEGORY_GENERAL, true, "");
+        Config.chatCopyEnabled   = configFile.getBoolean("chatCopyEnabled",   Configuration.CATEGORY_GENERAL, false,  "");
+        Config.chatCopyFormatted = configFile.getBoolean("chatCopyFormatted", Configuration.CATEGORY_GENERAL, false, "");
 
         if (configFile.hasChanged()) configFile.save();
     }
@@ -123,7 +125,8 @@ public class ChatUtils {
         configFile.get(Configuration.CATEGORY_GENERAL, "animatedChat",    false).set(Config.animatedChat);
 
         // Copy
-        configFile.get(Configuration.CATEGORY_GENERAL, "chatCopyEnabled", true).set(Config.chatCopyEnabled);
+        configFile.get(Configuration.CATEGORY_GENERAL, "chatCopyEnabled",   false ).set(Config.chatCopyEnabled);
+        configFile.get(Configuration.CATEGORY_GENERAL, "chatCopyFormatted", false).set(Config.chatCopyFormatted);
 
         configFile.save();
     }

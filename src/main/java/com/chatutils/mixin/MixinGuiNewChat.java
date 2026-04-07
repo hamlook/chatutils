@@ -119,7 +119,8 @@ public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui imple
     @Inject(method = "drawChat", at = @At("HEAD"))
     private void chatutils$computeHoveredLine(int updateCounter, CallbackInfo ci) {
         chatutils$hoveredLine = null;
-        if (!ChatUtils.Config.chatCopyEnabled || !getChatOpen()) return;
+        if (!ChatUtils.Config.chatCopyEnabled) return;
+        if (!getChatOpen()) return;
         chatutils$hoveredLine = chatutils$getHoveredChatLine(Mouse.getX(), mc.displayHeight - Mouse.getY() - 1);
     }
 
@@ -212,7 +213,9 @@ public abstract class MixinGuiNewChat extends net.minecraft.client.gui.Gui imple
         int visibleLines = Math.min(getLineCount(), drawnChatLines.size());
 
         if (y < mc.fontRendererObj.FONT_HEIGHT * visibleLines + visibleLines) {
-            int index = y / mc.fontRendererObj.FONT_HEIGHT + scrollPos;
+
+            int lineHeight = mc.fontRendererObj.FONT_HEIGHT + 1;
+            int index = y / lineHeight + scrollPos;
 
             if (index >= 0 && index < drawnChatLines.size()) {
                 return drawnChatLines.get(index);

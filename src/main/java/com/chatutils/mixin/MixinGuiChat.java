@@ -34,12 +34,17 @@ public class MixinGuiChat {
 
         String text;
         if (GuiScreen.isCtrlKeyDown()) {
-            text = EnumChatFormatting.getTextWithoutFormattingCodes(
-                    line.getChatComponent().getFormattedText());
+            String raw = line.getChatComponent().getFormattedText();
+            text = ChatUtils.Config.chatCopyFormatted
+                    ? raw
+                    : EnumChatFormatting.getTextWithoutFormattingCodes(raw);
         } else {
             IChatComponent fullMsg = ((ChatLineHook) line).chatutils$getFullMessage();
             IChatComponent src = (fullMsg != null) ? fullMsg : line.getChatComponent();
-            text = EnumChatFormatting.getTextWithoutFormattingCodes(src.getFormattedText());
+            String raw = src.getFormattedText();
+            text = ChatUtils.Config.chatCopyFormatted
+                    ? raw
+                    : EnumChatFormatting.getTextWithoutFormattingCodes(raw);
         }
 
         GuiScreen.setClipboardString(text);
